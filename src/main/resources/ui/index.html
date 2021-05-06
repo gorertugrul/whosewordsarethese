@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            display: block;
+            border: #fff7f7;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        #main-content {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .screenPart {
+            border: 2px solid #80ff00;
+            border-radius: 20px;
+            flex: 1;
+            display: block;
+            margin: 1em;
+            min-height: 30em;
+        }
+
+        .text-content {
+            background-color: #fcf4f0;
+            display: inline-block;
+            margin: 1em;
+        }
+
+        #saveTextButton {
+            margin: 1em;
+        }
+
+        #infoBar {
+            margin-top: 2em;
+            text-align: center;
+            font-weight: normal;
+        }
+    </style>
+
+    <title>Whose words belong to?</title>
+
+    <div id="main-content">
+
+        <div class="screenPart">
+            <h2>Add Writer</h2>
+            <form>
+                <label for="writer-writerName">Writer Name-Surname:</label>
+                <input type="text" id="writer-writerName"><br><br>
+                <button id="onButton" type="button" onclick="saveWriter()">Save Writer</button>
+                <br><br>
+                <br><br>
+                <button id="list-writers" type="button" onclick="listWriters()">Existing Writers</button>
+                <br><br>
+                <div id="existingWriters"></div>
+
+            </form>
+        </div>
+
+        <div class="screenPart">
+            <h2>Add Text Content</h2>
+            <form>
+                <label for="writing-subject">Topic:</label>
+                <input type="text" id="writing-subject"><br><br>
+
+                <label for="writing-writer">Writer Name-Surname:</label>
+                <input type="text" id="writing-writer"><br><br>
+
+                <label>Text Content:</label><br><br>
+                <textarea id="writing-content" name="Text1" cols="70" rows="20" class="text-content"></textarea>
+                <button id="saveTextButton" type="button" onclick="saveText()">Save Text</button>
+            </form>
+
+        </div>
+
+        <div class="screenPart">
+            <h2>Search</h2>
+            <textarea id="search-text-content" cols="50" rows="10" class="text-content"></textarea>
+            <button id="searchTextButton" type="button" onclick="searchText()">Search Text</button>
+            <br><br>
+            <h2 id="searchAnswer">?</h2>
+        </div>
+    </div>
+
+    <div>
+        <h4 id="infoBar">Info</h4>
+    </div>
+
+</head>
+<body>
+
+<script>
+
+    const endpointPrefix = "http://localhost:8080";
+
+    function saveWriter() {
+        let object = {
+            name: document.getElementById("writer-writerName").value
+        }
+        fetch(endpointPrefix + '/writer/add', {
+            method: "POST",
+            body: JSON.stringify(object),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(res => {
+            this.listWriters();
+            this.printInfo(res.text())
+        });
+    }
+
+    async function listWriters() {
+        const response = await fetch(endpointPrefix + '/writers/all');
+        const myJson = await response.json();
+        document.getElementById("existingWriters").innerText = myJson.join();
+    }
+
+    async function saveText() {
+        let textObject = {
+            writer: document.getElementById("writing-writer").value,
+            subject: document.getElementById("writing-subject").value,
+            content: document.getElementById("writing-content").value,
+        }
+
+        fetch(endpointPrefix + '/text/add', {
+            method: "POST",
+            body: JSON.stringify(textObject),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(res => printInfo(res.text()));
+    }
+
+    async function printInfo(result) {
+        document.getElementById("infoBar").innerText = await result;
+    }
+
+    async function printSearchResult(result) {
+        const myJson = await result.json();
+        document.getElementById("searchAnswer").innerText = myJson.length === 0 ? "Uygun bir yazar bulunamadı." : myJson.join();
+    }
+
+    function searchText() {
+        let elementById = document.getElementById("search-text-content");
+        if (elementById && elementById.value) {
+            fetch(endpointPrefix + '/whoseWords', {
+                method: "POST",
+                body: elementById.value,
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).then(res => printSearchResult(res));
+        }
+    }
+
+</script>
+
+</body>
+</html>
