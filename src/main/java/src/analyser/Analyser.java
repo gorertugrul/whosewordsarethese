@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class Analyser {
     public static List<String> analyse(String searchText, Service service) {
-        Map<String, Integer> ratios = service.writers().stream()
+        Map<String, Integer> ratios =  service.writers().stream()
                 .map(w -> new AbstractMap.SimpleEntry<>(w, findRatio(searchText, service.wordRatios(w))))
                 .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
         int maxRatio = ratios.values().stream().max(Integer::compareTo).orElse(0);
